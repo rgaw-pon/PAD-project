@@ -4,4 +4,4 @@ matplotlib
 seaborn
 numpy
 pandas
-sklearn
+scikit-learn
