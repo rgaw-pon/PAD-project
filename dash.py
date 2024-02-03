@@ -11,7 +11,6 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 
-
 inputFilePath="messy_data.csv"
 inputFileCleanedPath="data.csv"
 
@@ -23,7 +22,6 @@ st.subheader("Dane wejściowe")
 st.dataframe(df)
 
 df.columns = df.columns.str.replace(" ", "")
-#df=df.replace(" ","")
 
 df["clarity"]= df["clarity"].str.upper()
 df["color"]= df["color"].str.upper()
@@ -40,10 +38,6 @@ df[num_cols]=imp_mean.transform(df[num_cols])
 
 temp_df=df[cat_cols].replace("COLORLESS","C").replace( "IDEAL", "IDE.").replace( "PREMIUM", "PRE.").replace("VERY GOOD", "V.GOOD")
 
-#enc = OrdinalEncoder()
-#df[cat_cols]=enc.fit_transform(df[cat_cols])
-#print( pd.Categorical(df["cut"], categories=[" FAIR", " GOOD", " VERY GOOD", " PREMIUM", " IDEAL"], ordered=True).codes)
-
 df["cut"] = pd.Categorical(df["cut"], categories=["FAIR", "GOOD", "VERY GOOD", "PREMIUM", "IDEAL"], ordered=True).codes
 df["color"] = pd.Categorical(df["color"], categories=["COLORLESS", "D", "E", "F", "G", "H","I","J"], ordered=True).codes
 df["clarity"] = pd.Categorical(df["clarity"], categories=["IF","VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2"], ordered=True).codes
@@ -57,7 +51,6 @@ st.subheader("Histogram atrybutów kategorycznych:")
 
 count=0
 fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(10, 5))
-#rename(columns={" COLORLESS": "C", " IDEAL": "IDE.", "PREMIUM": "PRE.","VERY GOOD": "V.GOOD"})
 for i in temp_df:
 
     col = int((count%3))    
@@ -140,9 +133,29 @@ if (st.button("Dopasuj model")):
 
     st.write(model_fitted.summary(slim=True))
 
+st.header("Regresja liniowa wybranej formuły")
 
-#print(len(df["price"]))
+formula_inserted=st.text_input("Wpisz formułę dla ols", "price ~ volume + clarity + I(clarity**2)")
+st.text("Obecnie przedstawiany model dopasowany do formuły: {}".format(formula_inserted))
+model = smf.ols(formula=formula_inserted, data=df)
+model_fitted = model.fit()
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 5))
+ax.scatter(df[feature],df["price"], marker="o", color="blue", label="price vs {}".format(feature))
+ax.plot(df[feature], model_fitted.fittedvalues, color="red", label="Fitted regression line")
+plt.legend(loc="upper left")
+plt.xlabel("{}".format(feature))
+plt.ylabel("Price")
+st.write()
+st.pyplot(fig)
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 5))
+line_y=[0]*len(df["price"])
+ax.scatter(df["price"],model_fitted.resid, marker="o", color="blue", label="Model residuals")
+ax.plot(df["price"], line_y, color="red", label="y=0")
+plt.legend(loc="upper left")
+plt.xlabel("Price")
+plt.ylabel("Residuals")
+st.write()
+st.pyplot(fig)
+st.write(model_fitted.summary(slim=True))
 
-#print(len(lm_fit.fittedvalues))
 
-#plot_scatter_and_line(df["price"],model.resid, )
